@@ -8,7 +8,7 @@ from .serializers import PostSerializer, GroupSerializer
 from .serializers import CommentSerializer, FollowSerializer
 from rest_framework.pagination import LimitOffsetPagination
 from .permissions import AuthorizedAccess
-from .viewsets import ListCreateViewSet
+from .helpers import ListCreateViewSet
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -46,12 +46,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 class FollowViewSet(ListCreateViewSet):
     serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('following__username',)
+    filter_backends = [filters.SearchFilter,]
+    search_fields = ['following__username', 'user__username']
 
     def get_queryset(self):
-        new_queryset = Follow.objects.filter(user=self.request.user)
-        return new_queryset
+        user = self.request.user
+        return user.follower.all()
 
     def perform_create(self, serializer):
         user = self.request.user
